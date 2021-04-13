@@ -567,6 +567,26 @@ class Instagram
         return false;
     }
 
+	public function getMediasRaw(string $username, int $count)
+	{
+		$response = Request::get(Endpoints::getAccountJsonLink($username), $this->generateHeaders($this->userSession));
+
+		if (static::HTTP_NOT_FOUND === $response->code) {
+			throw new InstagramNotFoundException('Account with given username does not exist.');
+		}
+		if (static::HTTP_OK !== $response->code) {
+			throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+		}
+
+		$userArray = $this->decodeRawBodyToJson($response->raw_body);
+
+		if (!isset($userArray['graphql']['user'])) {
+			throw new InstagramException('Response code is ' . $response->code . '. Body: ' . static::getErrorBody($response->body) . ' Something went wrong. Please report issue.', $response->code);
+		}
+
+		return $userArray;
+    }
+
     /**
      * @param int $id
      * @param int $count
